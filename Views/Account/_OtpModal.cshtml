@@ -1,0 +1,165 @@
+<style>
+    .otp-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+    }
+    .otp-modal {
+        background: #fff;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        max-width: 400px;
+        text-align: center;
+        width: 100%;
+    }
+    .otp-code-display {
+        font-size: 2rem;
+        letter-spacing: 5px;
+        font-weight: bold;
+        background: #f4f4f4;
+        padding: 10px;
+        margin: 15px 0;
+        border-radius: 5px;
+        color: #333;
+    }
+    .otp-timer {
+        color: #d9534f;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+    .otp-btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+    .otp-btn-verify { background: #0275d8; color: #fff; }
+    .otp-btn-verify:disabled { background: #999; cursor: not-allowed; }
+    .otp-btn-resend { background: #f0ad4e; color: #fff; display: none; }
+    .otp-error { color: red; font-size: 0.9rem; display: none; }
+</style>
+
+<div id="otpOverlay" class="otp-overlay" style="display: @(TempData["ShowOtpModal"] != null ? "flex" : "none");">
+    <div class="otp-modal">
+        <h2>2-Step Verification</h2>
+        <p>Your verification code is shown below. Enter it before the timer runs out.</p>
+        
+        <div class="otp-code-display" id="devOtpDisplay">
+            @(TempData["GeneratedOtp"] ?? "000000")
+        </div>
+
+        <p class="otp-timer">Code expires in: <span id="otpCountdown">1:00</span></p>
+
+        <p id="otpErrorMsg" class="otp-error"></p>
+
+        <input type="text" id="otpInput" maxlength="6" placeholder="Enter 6-digit code" style="padding:10px; font-size: 1.2rem; width:80%; text-align:center; margin-bottom:15px;" />
+        <br />
+        <button id="btnVerify" class="otp-btn otp-btn-verify">Verify</button>
+        <button id="btnResend" class="otp-btn otp-btn-resend">Resend Code</button>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const overlay = document.getElementById("otpOverlay");
+        if (overlay.style.display !== "flex") return;
+
+        let timeLeft = 60;
+        let timerInterval;
+
+        const countdownEl = document.getElementById("otpCountdown");
+        const btnVerify = document.getElementById("btnVerify");
+        const btnResend = document.getElementById("btnResend");
+        const otpInput = document.getElementById("otpInput");
+        const errorMsg = document.getElementById("otpErrorMsg");
+        const devOtpDisplay = document.getElementById("devOtpDisplay");
+        
+        // Prevent form submission via Enter key globally for modal overlay
+        otpInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                btnVerify.click();
+            }
+        });
+
+        function startTimer() {
+            timeLeft = 60;
+            btnVerify.disabled = false;
+            btnResend.style.display = "none";
+            errorMsg.style.display = "none";
+            otpInput.value = '';
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                const seconds = timeLeft < 10 ? '0' + timeLeft : timeLeft;
+                countdownEl.innerText = '0:' + seconds;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    btnVerify.disabled = true;
+                    btnResend.style.display = "inline-block";
+                    countdownEl.innerText = "Code expired.";
+                }
+            }, 1000);
+        }
+
+        startTimer();
+
+        btnVerify.addEventListener("click", async () => {
+            const code = otpInput.value;
+            if(code.length !== 6) {
+                showError("Please enter a 6-digit code");
+                return;
+            }
+
+            try {
+                const response = await fetch('/Account/VerifyOtp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ OtpCode: code })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    window.location.href = data.redirectUrl;
+                } else {
+                    showError(data.message);
+                    if (data.expired) {
+                        clearInterval(timerInterval);
+                        btnVerify.disabled = true;
+                        btnResend.style.display = "inline-block";
+                    }
+                }
+            } catch (err) {
+                 showError("An error occurred during verification.");
+            }
+        });
+
+        btnResend.addEventListener("click", async () => {
+            try {
+                // To fetch new OTP
+                const response = await fetch('/Account/ResendOtp', { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    devOtpDisplay.innerText = data.newOtp;
+                    startTimer();
+                } else {
+                    showError("Could not resend OTP");
+                }
+            } catch (err) {
+                showError("Error resending OTP");
+            }
+        });
+
+        function showError(msg) {
+            errorMsg.innerText = msg;
+            errorMsg.style.display = "block";
+        }
+    });
+</script>

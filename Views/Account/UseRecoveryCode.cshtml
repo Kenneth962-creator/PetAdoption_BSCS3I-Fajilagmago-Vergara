@@ -1,0 +1,29 @@
+@model PetAdoptionManagementSystem.Models.ViewModels.UseRecoveryCodeViewModel
+@{
+    ViewData["Title"] = "Use Recovery Code";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <h2 class="mb-4">@ViewData["Title"]</h2>
+        <div class="alert alert-info">
+            Enter one of your emergency recovery codes to regain access to your account.
+        </div>
+        <form asp-action="UseRecoveryCode" method="post">
+            <input type="hidden" asp-for="Email" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="mb-4">
+                <label asp-for="RecoveryCode" class="form-label"></label>
+                <input asp-for="RecoveryCode" class="form-control" autocomplete="off" />
+                <span asp-validation-for="RecoveryCode" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Log in</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

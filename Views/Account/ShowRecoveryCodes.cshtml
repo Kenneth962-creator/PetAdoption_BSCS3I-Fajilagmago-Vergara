@@ -1,0 +1,23 @@
+@{
+    ViewData["Title"] = "Your Recovery Codes";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="alert alert-warning">
+            <h4 class="alert-heading">Important!</h4>
+            <p>This is the only time these codes will be displayed. Please copy them and save them in a safe place. You can use these to access your account if you lose access to your email.</p>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body bg-light text-center font-monospace fs-5">
+                @foreach(var code in ViewBag.RecoveryCodes as string[])
+                {
+                    <div>@code</div>
+                }
+            </div>
+        </div>
+
+        <a href="@Url.Action("Index", "Home")" class="btn btn-primary w-100">I have saved my codes, continue to the site</a>
+    </div>
+</div>

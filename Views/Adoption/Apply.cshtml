@@ -1,0 +1,90 @@
+@model PetAdoptionManagementSystem.Models.ViewModels.ApplyViewModel
+@{
+    ViewData["Title"] = "Apply for " + Model.PetName;
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Adoption Application</h3>
+                <p class="mb-0">You are applying to adopt <strong>@Model.PetName</strong></p>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Apply" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <input type="hidden" asp-for="PetId" />
+                    <input type="hidden" asp-for="PetName" />
+
+                    <div class="mb-3">
+                        <label asp-for="Reason" class="form-label"></label>
+                        <textarea asp-for="Reason" class="form-control" rows="3" placeholder="Tell us why you'd be a great fit..."></textarea>
+                        <span asp-validation-for="Reason" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="LivingSituation" class="form-label"></label>
+                            <input asp-for="LivingSituation" class="form-control" placeholder="e.g., Own House with yard" />
+                            <span asp-validation-for="LivingSituation" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="EmploymentStatus" class="form-label"></label>
+                            <input asp-for="EmploymentStatus" class="form-control" placeholder="e.g., Full-time remote" />
+                            <span asp-validation-for="EmploymentStatus" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input asp-for="HasOtherPets" class="form-check-input" />
+                                <label asp-for="HasOtherPets" class="form-check-label"></label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input asp-for="HasChildren" class="form-check-input" />
+                                <label asp-for="HasChildren" class="form-check-label"></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input asp-for="AgreedToTerms" class="form-check-input" />
+                            <label asp-for="AgreedToTerms" class="form-check-label text-primary fw-bold"></label>
+                        </div>
+                        <span asp-validation-for="AgreedToTerms" class="text-danger d-block mt-1"></span>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">Submit Application</button>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a asp-controller="Catalog" asp-action="Details" asp-route-id="@Model.PetId" class="text-decoration-none">Cancel and go back</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+@* Client-side adapter for MustBeTrue validation *@
+<script>
+    (function ($) {
+        if (!$ || !$.validator || !$.validator.unobtrusive) return;
+
+        $.validator.addMethod('mustbetrue', function (value, element, params) {
+            return element.checked === true;
+        });
+
+        $.validator.unobtrusive.adapters.addBool('mustbetrue');
+    })(window.jQuery);
+</script>
